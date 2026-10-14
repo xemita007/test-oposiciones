@@ -1,0 +1,769 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#2148c9">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<title>Test Oposiciones</title>
+<style>
+@font-face{font-family:"Bricolage Grotesque";font-weight:400;font-display:swap;src:url(fonts/bricolage-grotesque-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Bricolage Grotesque";font-weight:600;font-display:swap;src:url(fonts/bricolage-grotesque-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"Bricolage Grotesque";font-weight:700;font-display:swap;src:url(fonts/bricolage-grotesque-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Source Serif 4";font-weight:400;font-display:swap;src:url(fonts/source-serif-4-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Source Serif 4";font-weight:600;font-display:swap;src:url(fonts/source-serif-4-latin-600-normal.woff2) format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-weight:400;font-display:swap;src:url(fonts/ibm-plex-mono-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"IBM Plex Mono";font-weight:600;font-display:swap;src:url(fonts/ibm-plex-mono-latin-600-normal.woff2) format("woff2")}
+*{box-sizing:border-box}
+html,body{margin:0}
+[hidden]{display:none!important}
+:root{padding-top:env(safe-area-inset-top,0px)}
+/* Layout: una columna estrecha tipo "hoja de examen"; burbujas de respuesta como en la plantilla de lectura óptica, tinta azul de bolígrafo, rojo y verde de corrección */
+:root{
+  --paper:#f3f5f8; --sheet:#ffffff; --ink:#18202f; --muted:#5b6578; --line:#dbe0e8; --soft:#eaeef4;
+  --pen:#2148c9; --pen-soft:#e4eafc; --ok:#17784a; --ok-soft:#e1f3e9; --ko:#c2322a; --ko-soft:#fbe6e4; --ai:#8a5a00; --ai-soft:#fbf0d9;
+  --f-display:"Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --f-read:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#0f1218; --sheet:#171b23; --ink:#e7eaf1; --muted:#9aa3b4; --line:#2a303d; --soft:#20252f;
+  --pen:#8aa4ff; --pen-soft:#1f2848; --ok:#4fc58c; --ok-soft:#13291f; --ko:#ff7a6e; --ko-soft:#34191a; --ai:#e7b75a; --ai-soft:#2f2614; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --paper:#0f1218; --sheet:#171b23; --ink:#e7eaf1; --muted:#9aa3b4; --line:#2a303d; --soft:#20252f;
+  --pen:#8aa4ff; --pen-soft:#1f2848; --ok:#4fc58c; --ok-soft:#13291f; --ko:#ff7a6e; --ko-soft:#34191a; --ai:#e7b75a; --ai-soft:#2f2614; color-scheme:dark;}
+html,body{background:var(--paper);color:var(--ink)}
+body{font-family:var(--f-display);font-size:15px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+#app{max-width:720px;margin:0 auto;padding-inline:16px;padding-block:18px 120px}
+h1,h2,h3{margin:0;text-wrap:balance;font-weight:700;letter-spacing:-.01em}
+h1{font-size:1.65rem;line-height:1.15}
+h2{font-size:1.2rem}
+h3{font-size:1rem}
+.eyebrow{font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.muted{color:var(--muted)}
+.mono,.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+.stack{display:flex;flex-direction:column;gap:12px}
+.row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.spacer{flex:1}
+button,select,input{font:inherit;color:inherit}
+.btn{appearance:none;border:1px solid var(--line);background:var(--sheet);border-radius:999px;padding:9px 16px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;min-height:40px;white-space:nowrap}
+.btn:hover{border-color:var(--pen)}
+.btn.primary{background:var(--pen);border-color:var(--pen);color:var(--sheet)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--muted);padding-inline:8px}
+.btn.danger{color:var(--ko)}
+.btn[disabled]{opacity:.45;cursor:default}
+.btn.sm{min-height:32px;padding:5px 12px;font-size:.86rem}
+:focus-visible{outline:2px solid var(--pen);outline-offset:2px}
+.top{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.brand{font-weight:700;font-size:1.05rem;display:flex;align-items:center;gap:9px}
+.brand i{width:22px;height:22px;border-radius:50%;border:2px solid var(--pen);display:inline-grid;place-items:center;font-style:normal;font-family:var(--f-mono);font-size:.72rem;color:var(--pen)}
+.sheet{background:var(--sheet);border:1px solid var(--line);border-radius:var(--r)}
+.pad{padding:16px}
+.notice{padding:12px 14px;border-radius:var(--r);background:var(--soft);color:var(--muted);font-size:.9rem}
+/* resumen */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin:6px 0 22px}
+.stats div{background:var(--sheet);padding:12px 12px 10px}
+.stats b{display:block;font-family:var(--f-mono);font-size:1.3rem;font-weight:600}
+.stats span{font-size:.75rem;color:var(--muted)}
+@media (max-width:520px){.stats{grid-template-columns:repeat(2,1fr)}}
+/* continuar */
+.resume{display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
+.resume-card{display:flex;align-items:center;gap:14px;padding:13px 14px;border:1.5px solid var(--pen);background:var(--pen-soft);border-radius:var(--r);cursor:pointer;text-align:left;width:100%}
+.resume-card .t{font-weight:600;min-width:0}
+.resume-card .s{font-size:.84rem;color:var(--muted)}
+.ring{--p:0;width:42px;height:42px;flex:none;border-radius:50%;background:conic-gradient(var(--pen) calc(var(--p)*1%),var(--line) 0);display:grid;place-items:center}
+.ring::before{content:"";width:32px;height:32px;border-radius:50%;background:var(--pen-soft);grid-area:1/1}
+.ring em{grid-area:1/1;z-index:1;font-style:normal;font-family:var(--f-mono);font-size:.68rem;font-weight:600}
+/* lista de tests */
+.group{margin-bottom:22px}
+.group>.eyebrow{margin:0 2px 8px}
+.tests{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:var(--r);background:var(--sheet);overflow:hidden}
+.test{display:grid;grid-template-columns:1fr auto;gap:4px 14px;padding:13px 14px;border:0;border-top:1px solid var(--line);background:none;text-align:left;cursor:pointer;width:100%}
+.test:first-child{border-top:0}
+.test:hover{background:var(--soft)}
+.test .t{font-weight:600;min-width:0}
+.test .m{grid-column:1;font-size:.82rem;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.test .grade{grid-row:1/3;grid-column:2;align-self:center;text-align:right}
+.grade b{font-family:var(--f-mono);font-size:1.15rem;font-weight:600;display:block;line-height:1}
+.grade small{font-size:.7rem;color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:4px;font-size:.72rem;font-weight:600;padding:2px 8px;border-radius:999px;background:var(--soft);color:var(--muted)}
+.pill.warn{background:var(--ai-soft);color:var(--ai)}
+.pill.pen{background:var(--pen-soft);color:var(--pen)}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.ko{background:var(--ko-soft);color:var(--ko)}
+.bar{height:4px;background:var(--line);border-radius:4px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--pen)}
+/* formularios */
+.field{display:flex;flex-direction:column;gap:6px}
+.field>label,.field>.lab{font-size:.8rem;font-weight:600;color:var(--muted)}
+.seg{display:flex;flex-wrap:wrap;gap:6px}
+.seg button{border:1px solid var(--line);background:var(--sheet);border-radius:999px;padding:7px 13px;cursor:pointer;font-size:.88rem}
+.seg button[aria-pressed="true"]{border-color:var(--pen);background:var(--pen-soft);color:var(--pen);font-weight:600}
+input[type=text],select{border:1px solid var(--line);background:var(--sheet);border-radius:8px;padding:9px 11px;min-height:40px;width:100%}
+.drop{border:1.5px dashed var(--line);border-radius:var(--r);padding:18px;text-align:center;cursor:pointer;background:var(--sheet);display:block}
+.drop:hover,.drop.has{border-color:var(--pen)}
+.drop input{display:none}
+.drop b{display:block}
+/* quiz */
+.qbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--paper);padding-block:10px 10px;margin-bottom:6px;display:flex;flex-direction:column;gap:8px}
+.qbar .row{flex-wrap:nowrap}
+.qbar .ttl{font-weight:600;font-size:.92rem;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.qmeta{display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;margin:10px 0 8px}
+.qnum{font-family:var(--f-mono);font-weight:600;color:var(--pen);font-size:.95rem}
+.qtext{font-family:var(--f-read);font-size:1.16rem;line-height:1.5;margin:0 0 18px}
+.opts{display:flex;flex-direction:column;gap:9px}
+.opt{display:grid;grid-template-columns:34px 1fr;gap:12px;align-items:start;text-align:left;padding:12px 14px;border:1px solid var(--line);border-radius:var(--r);background:var(--sheet);cursor:pointer;font-family:var(--f-read);font-size:1.02rem;line-height:1.42;width:100%}
+.opt:hover:not([disabled]){border-color:var(--pen)}
+.opt[disabled]{cursor:default}
+.bub{width:30px;height:30px;border-radius:50%;border:1.6px solid var(--muted);display:grid;place-items:center;font-family:var(--f-mono);font-size:.9rem;font-weight:600;color:var(--muted);margin-top:-2px}
+.opt.sel{border-color:var(--pen);background:var(--pen-soft)}
+.opt.sel .bub{background:var(--pen);border-color:var(--pen);color:var(--sheet)}
+.opt.right{border-color:var(--ok);background:var(--ok-soft)}
+.opt.right .bub{background:var(--ok);border-color:var(--ok);color:var(--sheet)}
+.opt.wrong{border-color:var(--ko);background:var(--ko-soft)}
+.opt.wrong .bub{background:var(--ko);border-color:var(--ko);color:var(--sheet)}
+.opt.wrong span:last-child{text-decoration:line-through;text-decoration-color:var(--ko)}
+.fb{margin-top:14px;padding:11px 14px;border-radius:var(--r);font-weight:600;display:flex;gap:8px;align-items:center}
+.fb.ok{background:var(--ok-soft);color:var(--ok)}
+.fb.ko{background:var(--ko-soft);color:var(--ko)}
+.fb.nk{background:var(--ai-soft);color:var(--ai)}
+.foot{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--paper);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px))}
+.foot .in{max-width:720px;margin:0 auto;display:flex;gap:10px;align-items:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(40px,1fr));gap:5px}
+.cell{border:1px solid var(--line);background:var(--sheet);border-radius:6px;font-family:var(--f-mono);font-size:.74rem;padding:6px 0;cursor:pointer;text-align:center}
+.cell.ans{background:var(--pen-soft);border-color:var(--pen);color:var(--pen)}
+.cell.ok{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
+.cell.ko{background:var(--ko-soft);border-color:var(--ko);color:var(--ko)}
+.cell.cur{outline:2px solid var(--ink);outline-offset:1px}
+/* resultados */
+.score{display:grid;grid-template-columns:auto 1fr;gap:6px 22px;align-items:center;padding:20px 18px}
+.score .big{font-family:var(--f-mono);font-size:3.2rem;font-weight:600;line-height:1;grid-row:1/3}
+.score .big small{font-size:1rem;color:var(--muted)}
+.tally{display:flex;gap:8px;flex-wrap:wrap}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:18px 0 12px}
+.rev{padding:14px;border-top:1px solid var(--line)}
+.rev:first-child{border-top:0}
+.rev .q{font-family:var(--f-read);margin:4px 0 10px;line-height:1.45}
+.rev ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:5px}
+.rev li{display:grid;grid-template-columns:24px 1fr;gap:8px;font-family:var(--f-read);font-size:.95rem;line-height:1.38;padding:5px 8px;border-radius:7px}
+.rev li .bub{width:22px;height:22px;font-size:.72rem;margin:0}
+.rev li.right{background:var(--ok-soft)}
+.rev li.right .bub{background:var(--ok);border-color:var(--ok);color:var(--sheet)}
+.rev li.wrong{background:var(--ko-soft)}
+.rev li.wrong .bub{background:var(--ko);border-color:var(--ko);color:var(--sheet)}
+.hist{display:flex;flex-direction:column}
+.hist button{display:grid;grid-template-columns:1fr auto;gap:2px 12px;text-align:left;border:0;border-top:1px solid var(--line);background:none;padding:11px 14px;cursor:pointer;width:100%}
+.hist button:first-child{border-top:0}
+.hist button:hover{background:var(--soft)}
+.log{font-family:var(--f-mono);font-size:.8rem;color:var(--muted);white-space:pre-wrap}
+.modal{position:fixed;inset:0;z-index:20;background:rgb(0 0 0 / .45);display:grid;place-items:end center;padding:16px}
+.modal .sheet{max-width:440px;width:100%;padding:18px;margin-bottom:env(safe-area-inset-bottom,0px)}
+@media (min-width:600px){.modal{place-items:center}}
+.toast{position:fixed;left:50%;bottom:90px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:9px 16px;border-radius:999px;font-size:.88rem;z-index:30}
+.empty{padding:28px 16px;text-align:center}
+.prev{font-family:var(--f-read);font-size:.92rem}
+@media (prefers-reduced-motion:no-preference){.opt,.btn,.cell{transition:background .12s,border-color .12s}}
+</style>
+</head><body>
+<div id="app"></div>
+<div id="layer"></div>
+
+<script>
+'use strict';
+const PDFJS = 'lib/pdf.min.js';
+const PDFJS_W = 'lib/pdf.worker.min.js';
+const L = 'abcd';
+const CHUNK = 100;
+const S = {
+  db: null, user: null, uid: null, sample: null, ready: false, noDb: false,
+  tests: {}, testsLoaded: false, mine: {}, mineLoaded: false, banks: {},
+  view: { name: 'home' }, run: null, pen: 1 / 3, isOwner: true, builtin: {}, custom: {}, keyfix: {}, hidden: [],
+};
+const $app = document.getElementById('app');
+const $layer = document.getElementById('layer');
+
+// ---------- utilidades ----------
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = (n, d = 2) => n == null ? '–' : Number(n).toLocaleString('es-ES', { maximumFractionDigits: d, minimumFractionDigits: 0 });
+const when = ts => { const d = new Date(ts); return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }) + ' · ' + d.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' }); };
+const penLabel = p => p === 0 ? 'sin penalización' : p > 0.3 ? '−1/3 por fallo' : '−1/4 por fallo';
+function toast(msg) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2600); }
+function shuffle(a) { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]]; } return a; }
+function loadScript(src) { return new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('No se pudo cargar ' + src)); document.head.appendChild(s); }); }
+function go(view) { S.view = view; render(); window.scrollTo(0, 0); }
+function sessionsOf() { return Object.entries(S.mine).filter(([k, v]) => v.kind === 'session').map(([k, v]) => ({ id: k, ...v })); }
+function attemptsOf(testId) { return Object.entries(S.mine).filter(([k, v]) => v.kind === 'attempt' && (!testId || v.testId === testId)).map(([k, v]) => ({ id: k, ...v })).sort((a, b) => b.date - a.date); }
+
+// ---------- almacenamiento local (IndexedDB) ----------
+const IDB = (() => {
+  let dbp = null;
+  const open = () => dbp ||= new Promise((res, rej) => {
+    const r = indexedDB.open('test-oposiciones', 1);
+    r.onupgradeneeded = () => { r.result.createObjectStore('mine'); r.result.createObjectStore('meta'); };
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+  const tx = async (store, mode, fn) => { const db = await open(); return new Promise((res, rej) => { const t = db.transaction(store, mode); const st = t.objectStore(store); const out = fn(st); t.oncomplete = () => res(out && out.result); t.onerror = () => rej(t.error); }); };
+  return {
+    get: (st, k) => tx(st, 'readonly', s => s.get(k)),
+    put: (st, k, v) => tx(st, 'readwrite', s => s.put(v, k)),
+    del: (st, k) => tx(st, 'readwrite', s => s.delete(k)),
+    all: async st => { const db = await open(); return new Promise((res, rej) => { const out = {}; const t = db.transaction(st, 'readonly'); const c = t.objectStore(st).openCursor(); c.onsuccess = () => { const cur = c.result; if (cur) { out[cur.key] = cur.value; cur.continue(); } }; t.oncomplete = () => res(out); t.onerror = () => rej(t.error); }); },
+    clear: st => tx(st, 'readwrite', s => s.clear()),
+  };
+})();
+function rebuildTests() {
+  S.tests = {};
+  for (const [id, t] of Object.entries(S.builtin)) if (!S.hidden.includes(id)) S.tests[id] = metaOf(id, t.title, t.topic, applyFix(id, t.questions), 'PDF');
+  for (const [id, t] of Object.entries(S.custom)) S.tests[id] = metaOf(id, t.title, t.topic, t.questions, t.source, t.createdAt);
+}
+function applyFix(id, qs) { const f = S.keyfix[id]; return f ? qs.map(q => f[q.n] != null ? { ...q, a: f[q.n] } : q) : qs; }
+function metaOf(id, title, topic, qs, source, createdAt) { return { title, topic, count: qs.length, keyCount: qs.filter(q => q.a != null).length, source, createdAt: createdAt || 0 }; }
+async function loadLocal() {
+  S.mine = await IDB.all('mine');
+  const meta = await IDB.all('meta');
+  S.custom = {}; S.keyfix = {}; S.hidden = meta.hidden || [];
+  for (const [k, v] of Object.entries(meta)) { if (k.startsWith('custom:')) S.custom[k.slice(7)] = v; if (k.startsWith('keyfix:')) S.keyfix[k.slice(7)] = v; }
+  if (S.mine.cfg && typeof S.mine.cfg.pen === 'number') S.pen = S.mine.cfg.pen;
+  S.banks = {}; rebuildTests();
+}
+render();
+(async () => {
+  try {
+    const list = await (await fetch('tests.json')).json();
+    list.forEach(t => { S.builtin[t.id] = t; });
+    await loadLocal();
+    S.testsLoaded = S.mineLoaded = true;
+    navigator.storage?.persist?.().catch(() => { });
+  } catch (e) { S.noDb = true; S.err = String(e.message || e); }
+  render();
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => { });
+})();
+function passiveRender() { if (['home', 'detail', 'results'].includes(S.view.name)) render(); }
+
+// ---------- datos ----------
+async function loadBank(testId) {
+  if (S.banks[testId]) return S.banks[testId];
+  const src = S.custom[testId] ? S.custom[testId].questions : S.builtin[testId] ? applyFix(testId, S.builtin[testId].questions) : [];
+  const byN = {}; src.forEach(q => { byN[q.n] = q; });
+  return (S.banks[testId] = { qs: src, byN });
+}
+async function saveDoc(path, data) {
+  const id = path.split('/').pop();
+  S.mine[id] = data;
+  try { await IDB.put('mine', id, data); } catch (e) { toast('No se pudo guardar en el móvil: ' + (e.message || e)); }
+}
+async function delDoc(path) { const id = path.split('/').pop(); delete S.mine[id]; await IDB.del('mine', id).catch(() => { }); }
+const myPath = id => 'mine/' + id;
+function grade(items, bank, pen) {
+  let ok = 0, ko = 0, bl = 0, nk = 0;
+  for (const it of items) {
+    const q = bank.byN[it.n]; const hasKey = q && q.a != null;
+    if (!hasKey) { nk++; continue; }
+    if (it.r == null || it.r < 0) bl++; else if (it.r === q.a) ok++; else ko++;
+  }
+  const g = ok + ko + bl;
+  const nota = g ? Math.max(0, (ok - ko * pen) / g * 10) : null;
+  return { ok, ko, bl, nk, nota };
+}
+function lastResultByN(testId, bank) {
+  // estado más reciente de cada pregunta: 'ok' | 'ko' | 'bl'
+  const map = {};
+  const atts = attemptsOf(testId).slice().reverse();
+  for (const a of atts) for (const it of a.items || []) {
+    const q = bank ? bank.byN[it.n] : null; if (!q || q.a == null) continue;
+    map[it.n] = it.r == null || it.r < 0 ? 'bl' : it.r === q.a ? 'ok' : 'ko';
+  }
+  return map;
+}
+
+// ---------- render ----------
+function render() {
+  const v = S.view;
+  if (!S.ready && !S.noDb && !(S.testsLoaded && S.mineLoaded)) { $app.innerHTML = shell(`<div class="notice">Cargando tus tests…</div>`); return; }
+  if (S.noDb) { $app.innerHTML = shell(`<div class="notice">No se pudieron cargar los datos (${esc(S.err)}). Cierra y vuelve a abrir la app.</div>`); return; }
+  S.ready = true;
+  if (v.name === 'home') return renderHome();
+  if (v.name === 'detail') return renderDetail();
+  if (v.name === 'quiz') return renderQuiz();
+  if (v.name === 'results') return renderResults();
+  if (v.name === 'upload') return renderUpload();
+}
+function shell(inner, back) {
+  return `<div class="top">${back ? `<button class="btn ghost" data-act="home">← Biblioteca</button>` : `<div class="brand"><i>a</i>Test Oposiciones</div>`}<span class="spacer"></span>${back ? '' : `<button class="btn sm" data-act="upload">+ Subir PDF</button>`}</div>${inner}`;
+}
+
+function renderHome() {
+  const tests = Object.entries(S.tests).map(([id, t]) => ({ id, ...t }));
+  const atts = attemptsOf();
+  const totalQ = tests.reduce((s, t) => s + (t.count || 0), 0);
+  const okAll = atts.reduce((s, a) => s + (a.ok || 0), 0), koAll = atts.reduce((s, a) => s + (a.ko || 0), 0);
+  const sess = sessionsOf().sort((a, b) => b.updatedAt - a.updatedAt);
+  let h = `<p class="eyebrow">Tu progreso</p>
+  <div class="stats">
+    <div><b>${tests.length}</b><span>tests</span></div>
+    <div><b>${fmt(totalQ, 0)}</b><span>preguntas</span></div>
+    <div><b>${atts.length}</b><span>intentos</span></div>
+    <div><b>${okAll + koAll ? fmt(okAll / (okAll + koAll) * 100, 0) + '%' : '–'}</b><span>aciertos</span></div>
+  </div>`;
+  if (sess.length) {
+    h += `<p class="eyebrow" style="margin:0 2px 8px">Continuar donde lo dejaste</p><div class="resume">`;
+    for (const s of sess) {
+      const t = S.tests[s.testId]; if (!t) continue;
+      const done = Object.keys(s.ans || {}).length, tot = s.ns.length;
+      h += `<button class="resume-card" data-act="resume" data-id="${esc(s.testId)}">
+        <span class="ring" style="--p:${Math.round(done / tot * 100)}"><em>${Math.round(done / tot * 100)}%</em></span>
+        <span class="stack" style="gap:2px;min-width:0"><span class="t">${esc(t.title)}</span>
+        <span class="s">Pregunta ${s.pos + 1} de ${tot} · ${s.mode === 'examen' ? 'modo examen' : 'modo práctica'}${s.src === 'fallos' ? ' · repaso de falladas' : ''}</span></span>
+        <span class="spacer"></span><span class="pill pen">Seguir →</span></button>`;
+    }
+    h += `</div>`;
+  }
+  if (!tests.length) {
+    h += `<div class="sheet empty stack" style="align-items:center"><h2>Todavía no hay tests</h2><p class="muted" style="margin:0">Sube un PDF con preguntas tipo test (y su plantilla de soluciones) y se convertirá en un test interactivo.</p><button class="btn primary" data-act="upload">Subir PDF</button></div>`;
+  }
+  const topics = {};
+  tests.forEach(t => (topics[t.topic || 'Otros'] ||= []).push(t));
+  for (const [topic, list] of Object.entries(topics).sort((a, b) => a[0].localeCompare(b[0], 'es'))) {
+    list.sort((a, b) => a.title.localeCompare(b.title, 'es'));
+    h += `<section class="group"><p class="eyebrow">${esc(topic)}</p><div class="tests">`;
+    for (const t of list) {
+      const at = attemptsOf(t.id); const best = at.reduce((m, a) => a.nota != null && (m == null || a.nota > m) ? a.nota : m, null);
+      const s = S.mine['sess~' + t.id];
+      h += `<button class="test" data-act="detail" data-id="${esc(t.id)}">
+        <span class="t">${esc(t.title)}</span>
+        <span class="grade">${best != null ? `<b>${fmt(best, 1)}</b><small>mejor nota</small>` : `<small>sin hacer</small>`}</span>
+        <span class="m"><span>${t.count} preguntas</span>${at.length ? `<span>· ${at.length} intento${at.length > 1 ? 's' : ''}</span>` : ''}
+        ${!t.keyCount ? `<span class="pill warn">Sin soluciones</span>` : t.aiKey ? `<span class="pill warn">Soluciones IA</span>` : t.keyCount < t.count ? `<span class="pill warn">${t.keyCount}/${t.count} con solución</span>` : ''}
+        ${s ? `<span class="pill pen">En curso</span>` : ''}</span>
+      </button>`;
+    }
+    h += `</div></section>`;
+  }
+  h += `<div class="row muted" style="font-size:.85rem;margin-top:8px">Puntuación: <select id="penSel" style="width:auto;min-height:34px;padding:4px 8px">
+    <option value="0" ${S.pen === 0 ? 'selected' : ''}>Sin penalización</option>
+    <option value="0.3333333333" ${S.pen > 0.3 ? 'selected' : ''}>Cada fallo resta 1/3</option>
+    <option value="0.25" ${S.pen === 0.25 ? 'selected' : ''}>Cada fallo resta 1/4</option></select></div>
+  <div class="sheet pad stack" style="margin-top:22px;gap:10px"><h3>Copia de seguridad</h3>
+    <p class="muted" style="margin:0;font-size:.86rem">Tu progreso y tus tests subidos se guardan solo en este móvil. Descarga una copia de vez en cuando para no perderlos si cambias de móvil o borras la app.</p>
+    <div class="row"><button class="btn sm" data-act="export">Descargar copia</button><label class="btn sm" for="importFile">Restaurar copia</label><input type="file" id="importFile" accept="application/json,.json" hidden></div></div>`;
+  $app.innerHTML = shell(h);
+}
+
+function renderDetail() {
+  const id = S.view.id, t = S.tests[id];
+  if (!t) return go({ name: 'home' });
+  const atts = attemptsOf(id), s = S.mine['sess~' + id];
+  const bank = S.banks[id];
+  if (!bank) loadBank(id).then(() => S.view.name === 'detail' && S.view.id === id && render());
+  const st = bank ? lastResultByN(id, bank) : {};
+  const seen = Object.keys(st).length, wrongN = Object.values(st).filter(x => x !== 'ok').length;
+  const o = S.view.opts ||= { mode: 'practica', count: 'all', order: 'seq' };
+  const segBtn = (k, val, label) => `<button data-act="opt" data-k="${k}" data-v="${val}" aria-pressed="${o[k] === val}">${label}</button>`;
+  let h = `<div class="stack" style="gap:6px;margin-bottom:18px"><p class="eyebrow">${esc(t.topic || '')}</p><h1>${esc(t.title)}</h1>
+    <div class="row muted" style="font-size:.88rem;gap:8px"><span>${t.count} preguntas</span>
+    ${t.keyCount ? `<span>· ${t.keyCount === t.count ? 'todas con solución' : t.keyCount + ' con solución'}</span>` : ''}
+    ${bank && t.keyCount ? `<span>· ${seen} vistas</span>` : ''}
+    ${t.aiKey ? `<span class="pill warn">Soluciones propuestas por IA</span>` : ''}</div></div>`;
+  if (!t.keyCount) h += `<div class="notice" style="margin-bottom:16px">Este PDF no trae plantilla de soluciones. Puedes hacer el test, pero no se corregirá hasta que añadas las soluciones (abajo).</div>`;
+  if (s) {
+    const done = Object.keys(s.ans || {}).length;
+    h += `<div class="sheet pad stack" style="margin-bottom:16px;border-color:var(--pen)"><div class="row"><span class="ring" style="--p:${Math.round(done / s.ns.length * 100)}"><em>${Math.round(done / s.ns.length * 100)}%</em></span>
+      <div class="stack" style="gap:0"><b>Tienes un test a medias</b><span class="muted" style="font-size:.86rem">${done} de ${s.ns.length} respondidas · ${s.mode === 'examen' ? 'modo examen' : 'modo práctica'} · ${when(s.updatedAt)}</span></div></div>
+      <div class="row"><button class="btn primary" data-act="resume" data-id="${esc(id)}">Seguir por la pregunta ${s.pos + 1}</button><button class="btn sm ghost" data-act="finish-from-detail">Terminar y corregir</button></div></div>`;
+  }
+  h += `<div class="sheet pad stack" style="gap:16px;margin-bottom:22px"><h2>${s ? 'Empezar uno nuevo' : 'Empezar'}</h2>
+    <div class="field"><span class="lab">Modo</span><div class="seg">${segBtn('mode', 'practica', 'Práctica · corrige al momento')}${segBtn('mode', 'examen', 'Examen · corrige al final')}</div></div>
+    <div class="field"><span class="lab">Preguntas</span><div class="seg">${segBtn('count', 'all', 'Todas (' + t.count + ')')}${[10, 25, 50].filter(n => n < t.count).map(n => segBtn('count', String(n), n + ' al azar')).join('')}
+      ${bank && wrongN ? segBtn('count', 'fallos', 'Falladas (' + wrongN + ')') : ''}${bank && seen && seen < t.count ? segBtn('count', 'nuevas', 'No vistas (' + (t.count - seen) + ')') : ''}</div></div>
+    <div class="field"><span class="lab">Orden</span><div class="seg">${segBtn('order', 'seq', 'Como en el PDF')}${segBtn('order', 'rand', 'Aleatorio')}</div></div>
+    <div><button class="btn primary" data-act="start" ${bank ? '' : 'disabled'}>${bank ? 'Empezar test' : 'Cargando preguntas…'}</button></div></div>`;
+  h += `<h2 style="margin-bottom:10px">Historial</h2>`;
+  if (!atts.length) h += `<p class="muted">Aún no has terminado ningún intento de este test.</p>`;
+  else {
+    h += `<div class="sheet hist">`;
+    for (const a of atts) h += `<button data-act="result" data-id="${esc(a.id)}"><span><b>${a.nota != null ? fmt(a.nota) : '–'}</b> <span class="muted">/ 10</span></span><span class="tally"><span class="pill ok">✓ ${a.ok}</span><span class="pill ko">✗ ${a.ko}</span><span class="pill">○ ${a.bl}</span></span><span class="muted" style="font-size:.8rem">${when(a.date)} · ${a.items.length} preguntas · ${a.mode === 'examen' ? 'examen' : 'práctica'}${a.src === 'fallos' ? ' · falladas' : ''}</span></button>`;
+    h += `</div>`;
+  }
+  h += `<h2 style="margin:26px 0 10px">Soluciones y ajustes</h2><div class="sheet pad stack">
+    <label class="drop" id="keyDrop"><input type="file" accept="application/pdf" id="keyFile"><b>${t.keyCount ? 'Reemplazar plantilla de soluciones' : 'Añadir plantilla de soluciones'}</b><span class="muted" style="font-size:.85rem">Sube el PDF con las respuestas (1 B, 2 C…)</span></label>
+    ${S.sample && t.keyCount < t.count ? `<button class="btn" data-act="ai-solve">Proponer soluciones con IA</button><p class="muted" style="margin:0;font-size:.82rem">Claude responde las preguntas sin solución. Quedarán marcadas como “propuesta IA” para que las compruebes.</p>` : ''}
+    <div id="keyLog" class="log"></div>
+    ${S.isOwner ? `<div><button class="btn sm danger" data-act="del-test">Eliminar este test</button></div>` : ''}</div>`;
+  $app.innerHTML = shell(h, true);
+}
+
+function startSession(id, opts, nsOverride, src) {
+  const bank = S.banks[id];
+  let ns = nsOverride || bank.qs.map(q => q.n);
+  if (!nsOverride) {
+    const st = lastResultByN(id, bank);
+    if (opts.count === 'fallos') ns = ns.filter(n => st[n] && st[n] !== 'ok');
+    else if (opts.count === 'nuevas') ns = ns.filter(n => !st[n]);
+    else if (opts.count !== 'all') { ns = shuffle(ns).slice(0, +opts.count); if (opts.order === 'seq') ns.sort((a, b) => a - b); }
+    if (opts.order === 'rand') ns = shuffle(ns);
+  }
+  if (!ns.length) { toast('No hay preguntas con ese filtro.'); return; }
+  const sess = { kind: 'session', testId: id, mode: opts.mode, ns, ans: {}, pos: 0, src: src || (opts.count === 'fallos' ? 'fallos' : opts.count), startedAt: Date.now(), updatedAt: Date.now() };
+  saveDoc(myPath('sess~' + id), sess);
+  S.run = { id, sess, sheet: false };
+  go({ name: 'quiz' });
+}
+
+// ---------- quiz ----------
+function renderQuiz() {
+  const r = S.run; if (!r) return go({ name: 'home' });
+  const t = S.tests[r.id], bank = S.banks[r.id], s = r.sess;
+  const n = s.ns[s.pos], q = bank.byN[n], my = s.ans[s.pos];
+  const answered = my != null, practice = s.mode === 'practica', reveal = practice && answered;
+  const done = Object.keys(s.ans).length;
+  let okC = 0, koC = 0;
+  if (practice) for (const [p, a] of Object.entries(s.ans)) { const qq = bank.byN[s.ns[p]]; if (qq.a == null) continue; a === qq.a ? okC++ : koC++; }
+  let h = `<div class="qbar"><div class="row"><button class="btn ghost" data-act="quit" aria-label="Salir">← Salir</button><span class="ttl">${esc(t.title)}</span><span class="spacer"></span><button class="btn sm" data-act="sheet">Hoja</button></div>
+    <div class="bar"><i style="width:${done / s.ns.length * 100}%"></i></div>
+    <div class="row muted" style="font-size:.8rem;justify-content:space-between"><span class="mono">${done}/${s.ns.length} respondidas</span>${practice ? `<span class="mono"><span style="color:var(--ok)">✓ ${okC}</span> · <span style="color:var(--ko)">✗ ${koC}</span></span>` : `<span>Modo examen</span>`}</div></div>`;
+  if (r.sheet) {
+    h += `<div class="sheet pad stack" style="margin-bottom:14px"><div class="row"><b>Hoja de respuestas</b><span class="spacer"></span><button class="btn sm" data-act="finish">Terminar y corregir</button></div><div class="grid">`;
+    s.ns.forEach((nn, i) => {
+      const a = s.ans[i], qq = bank.byN[nn];
+      let c = a == null ? '' : practice && qq.a != null ? (a === qq.a ? 'ok' : 'ko') : 'ans';
+      h += `<button class="cell ${c} ${i === s.pos ? 'cur' : ''}" data-act="jump" data-i="${i}">${i + 1}</button>`;
+    });
+    h += `</div></div>`;
+  }
+  h += `<div class="qmeta"><span class="qnum">Pregunta ${s.pos + 1}</span>${s.ns.length !== bank.qs.length || s.ns[s.pos] !== s.pos + 1 ? `<span class="muted" style="font-size:.8rem">nº ${n} del PDF</span>` : ''}${q.ai ? `<span class="pill warn">solución IA</span>` : ''}</div>
+    <p class="qtext">${esc(q.q)}</p><div class="opts">`;
+  q.o.forEach((o, i) => {
+    let c = '';
+    if (reveal && q.a != null) c = i === q.a ? 'right' : i === my ? 'wrong' : '';
+    else if (my === i) c = 'sel';
+    h += `<button class="opt ${c}" data-act="pick" data-i="${i}" ${reveal ? 'disabled' : ''}><span class="bub">${L[i]}</span><span>${esc(o)}</span></button>`;
+  });
+  h += `</div>`;
+  if (reveal) h += q.a == null ? `<div class="fb nk">Este test no trae solución para esta pregunta.</div>` : my === q.a ? `<div class="fb ok">✓ Correcta${q.ai ? ' (según la propuesta de IA)' : ''}</div>` : `<div class="fb ko">✗ Incorrecta · la correcta es la ${L[q.a]}${q.ai ? ' (propuesta IA)' : ''}</div>`;
+  if (!practice && answered) h += `<div style="margin-top:10px"><button class="btn sm ghost" data-act="clear">Borrar respuesta (dejar en blanco)</button></div>`;
+  const last = s.pos === s.ns.length - 1;
+  h += `<div class="foot"><div class="in"><button class="btn" data-act="prev" ${s.pos === 0 ? 'disabled' : ''}>← Anterior</button><span class="spacer"></span>
+    ${last ? `<button class="btn primary" data-act="finish">Terminar y corregir</button>` : `<button class="btn ${answered ? 'primary' : ''}" data-act="next">${answered ? 'Siguiente →' : 'Saltar →'}</button>`}</div></div>`;
+  $app.innerHTML = h;
+}
+function persistRun() { const s = S.run.sess; s.updatedAt = Date.now(); saveDoc(myPath('sess~' + S.run.id), { ...s, ans: { ...s.ans } }); }
+
+function finishRun(sess, id) {
+  const bank = S.banks[id];
+  const items = sess.ns.map((n, i) => ({ n, r: sess.ans[i] != null ? sess.ans[i] : -1 }));
+  const g = grade(items, bank, S.pen);
+  const att = { kind: 'attempt', testId: id, title: S.tests[id]?.title || '', date: Date.now(), mode: sess.mode, src: sess.src || 'all', items, pen: S.pen, ...g };
+  const aid = 'att~' + att.date;
+  S.mine[aid] = att;
+  saveDoc(myPath(aid), att).then(() => delDoc(myPath('sess~' + id)));
+  delete S.mine['sess~' + id];
+  S.run = null;
+  go({ name: 'results', id: aid, filter: g.ko ? 'ko' : 'all' });
+}
+
+// ---------- resultados ----------
+function renderResults() {
+  const a = S.mine[S.view.id];
+  if (!a) return go({ name: 'home' });
+  const bank = S.banks[a.testId];
+  if (!bank) { $app.innerHTML = shell('<div class="notice">Cargando corrección…</div>', true); loadBank(a.testId).then(render); return; }
+  const t = S.tests[a.testId];
+  const f = S.view.filter || 'all';
+  const stOf = it => { const q = bank.byN[it.n]; if (!q || q.a == null) return 'nk'; return it.r < 0 ? 'bl' : it.r === q.a ? 'ok' : 'ko'; };
+  const wrongNs = a.items.filter(it => ['ko', 'bl'].includes(stOf(it))).map(it => it.n);
+  let h = `<p class="eyebrow">${esc(t?.title || a.title)}</p><h1 style="margin:4px 0 14px">Resultado</h1>
+  <div class="sheet score"><div class="big">${a.nota != null ? fmt(a.nota) : '–'}<small> /10</small></div>
+    <div class="tally"><span class="pill ok">✓ ${a.ok} aciertos</span><span class="pill ko">✗ ${a.ko} fallos</span><span class="pill">○ ${a.bl} en blanco</span>${a.nk ? `<span class="pill warn">${a.nk} sin solución</span>` : ''}</div>
+    <div class="muted" style="font-size:.82rem">${when(a.date)} · ${penLabel(a.pen)} · aciertos netos ${fmt(a.ok - a.ko * a.pen)}</div></div>
+  <div class="row" style="margin-top:14px">${wrongNs.length ? `<button class="btn primary" data-act="retry-wrong">Repasar las ${wrongNs.length} falladas</button>` : ''}<button class="btn" data-act="detail" data-id="${esc(a.testId)}">Volver al test</button></div>
+  <div class="tabs seg">`;
+  const counts = { all: a.items.length, ko: a.ko, ok: a.ok, bl: a.bl };
+  for (const [k, lab] of [['all', 'Todas'], ['ko', 'Falladas'], ['ok', 'Acertadas'], ['bl', 'En blanco']]) h += `<button data-act="filter" data-v="${k}" aria-pressed="${f === k}">${lab} (${counts[k]})</button>`;
+  h += `</div><div class="sheet">`;
+  const list = a.items.map((it, i) => ({ it, i, st: stOf(it) })).filter(x => f === 'all' || x.st === f);
+  if (!list.length) h += `<div class="empty muted">Nada en esta lista.</div>`;
+  for (const { it, i, st } of list) {
+    const q = bank.byN[it.n]; if (!q) continue;
+    h += `<div class="rev"><div class="row" style="gap:8px"><span class="qnum">${i + 1}.</span><span class="muted" style="font-size:.78rem">nº ${it.n} del PDF</span><span class="spacer"></span>
+      ${st === 'ok' ? '<span class="pill ok">Acertada</span>' : st === 'ko' ? '<span class="pill ko">Fallada</span>' : st === 'bl' ? '<span class="pill">En blanco</span>' : '<span class="pill warn">Sin solución</span>'}${q.ai ? '<span class="pill warn">solución IA</span>' : ''}</div>
+      <p class="q">${esc(q.q)}</p><ol>`;
+    q.o.forEach((o, k) => { const c = k === q.a ? 'right' : k === it.r ? 'wrong' : ''; h += `<li class="${c}"><span class="bub">${L[k]}</span><span>${esc(o)}${k === it.r ? ' <b style="font-family:var(--f-display);font-size:.78rem">← tu respuesta</b>' : ''}</span></li>`; });
+    h += `</ol></div>`;
+  }
+  h += `</div>`;
+  $app.innerHTML = shell(h, true);
+}
+
+// ---------- PDF ----------
+async function ensurePdfJs() {
+  if (window.pdfjsLib) return;
+  await loadScript(PDFJS);
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc = PDFJS_W;
+}
+async function pdfText(file) {
+  await ensurePdfJs();
+  const doc = await window.pdfjsLib.getDocument({ data: new Uint8Array(await file.arrayBuffer()) }).promise;
+  const pages = [];
+  for (let p = 1; p <= doc.numPages; p++) {
+    const tc = await (await doc.getPage(p)).getTextContent();
+    const rows = [];
+    for (const it of tc.items) {
+      if (typeof it.str !== 'string' || !it.str) continue;
+      const x = it.transform[4], y = it.transform[5];
+      let row = rows.find(r => Math.abs(r.y - y) < 3);
+      if (!row) rows.push(row = { y, items: [] });
+      row.items.push({ x, w: it.width, s: it.str });
+    }
+    rows.sort((a, b) => b.y - a.y);
+    pages.push(rows.map(r => {
+      r.items.sort((a, b) => a.x - b.x);
+      let out = '', end = null;
+      for (const it of r.items) {
+        if (end != null) { const gap = it.x - end; if (gap > 8) out += '    '; else if (gap > 1.5 && !/\s$/.test(out) && !/^\s/.test(it.s)) out += ' '; }
+        out += it.s; end = it.x + it.w;
+      }
+      return out;
+    }).join('\n'));
+  }
+  return pages.join('\n\f\n');
+}
+const QRE = /^\s*(\d{1,3})\s*(?:\.-|\.|-|–|\)|(?=\s+[¿¡A-ZÁÉÍÓÚ]))\s*(.*)$/;
+const ORE = /^\s*([a-dA-D])\s*[\.\)]\s*(.*)$/;
+const KEY_MARK = /^\s*(PLANTILLA|SOLUCIONES|SOLUCIÓN|SOLUCION|RESPUESTAS|CLAVE DE RESPUESTAS)\b/i;
+function cleanLines(text) {
+  const raw = text.replace(/\f/g, '\n').split('\n');
+  const pages = (text.match(/\f/g) || []).length + 1;
+  const norm = l => l.trim().replace(/\s+\d{1,3}$/, '').replace(/\s+/g, ' ');
+  const freq = {}; raw.forEach(l => { const k = norm(l); if (k) freq[k] = (freq[k] || 0) + 1; });
+  const out = [];
+  for (const l of raw) {
+    const k = norm(l); if (!k || /^\d{1,3}$/.test(k)) continue;
+    if (pages >= 3 && freq[k] >= Math.max(3, pages * 0.5) && !ORE.test(k) && !KEY_MARK.test(k)) continue;
+    out.push(...l.split(/\s{3,}(?=[b-dB-D]\)\s)/));
+  }
+  return out;
+}
+function parseQuestions(lines) {
+  const qs = []; let cur = null, part = null, expect = 1;
+  for (const l of lines) {
+    const m = l.match(QRE);
+    if (m && +m[1] === expect && !ORE.test(l)) { cur = { n: expect, q: m[2], o: [] }; qs.push(cur); part = 'q'; expect++; continue; }
+    if (!cur) continue;
+    const mo = l.match(ORE), nxt = cur.o.length < 4 ? L[cur.o.length] : null;
+    if (mo && nxt && (mo[1].toLowerCase() === nxt || (part === 'o' && mo[1].toLowerCase() < nxt))) { cur.o.push(mo[2]); part = 'o'; continue; }
+    if (part === 'q') cur.q += ' ' + l.trim(); else if (part === 'o') cur.o[cur.o.length - 1] += ' ' + l.trim();
+  }
+  const cl = s => s.replace(/\s+/g, ' ').trim();
+  return qs.map(q => ({ n: q.n, q: cl(q.q), o: q.o.map(cl) }));
+}
+function parseKey(text) {
+  text = text.replace(/RESERVA/gi, ' ');
+  const pairs = {}, re = /(?<![\d\/])(\d{1,3})\s*(?:–|-|\.-|\.)?\s*([A-Da-d])(?![A-Za-zÁ-úñÑ])/g;
+  let m; while ((m = re.exec(text))) if (!(m[1] in pairs)) pairs[+m[1]] = L.indexOf(m[2].toLowerCase());
+  const grid = {}, rows = text.split('\n').map(l => l.trim().split(/\s+/)).filter(r => r[0]);
+  for (let i = 0; i < rows.length - 1; i++) {
+    const a = rows[i], b = rows[i + 1];
+    if (a.length === b.length && a.every(x => /^\d+$/.test(x)) && b.every(x => /^[a-dA-D]$/.test(x))) a.forEach((n, j) => grid[+n] = L.indexOf(b[j].toLowerCase()));
+  }
+  return Object.keys(grid).length > Object.keys(pairs).length ? grid : pairs;
+}
+function splitAtKey(lines) {
+  let idx = -1;
+  for (let i = lines.length - 1; i > 0; i--) if (KEY_MARK.test(lines[i])) { idx = i; break; }
+  if (idx < 0) return { body: lines, key: '' };
+  const key = lines.slice(idx).join('\n');
+  if (Object.keys(parseKey(key)).length < 5) return { body: lines, key: '' };
+  return { body: lines.slice(0, idx), key };
+}
+
+// ---------- subir ----------
+function renderUpload() {
+  const u = S.view.u ||= { qFile: null, kFile: null, title: '', topic: '', log: '', result: null, busy: false };
+  const topics = [...new Set(Object.values(S.tests).map(t => t.topic).filter(Boolean))];
+  let h = `<h1 style="margin-bottom:6px">Subir PDF</h1><p class="muted" style="margin:0 0 18px">Se leen las preguntas (1, 2, 3… con opciones a-d) y la plantilla de soluciones, esté al final del PDF o en otro archivo. Todo se procesa en el móvil, sin internet.</p>
+  <div class="sheet pad stack" style="gap:14px">
+    <label class="drop ${u.qFile ? 'has' : ''}"><input type="file" accept="application/pdf" id="qFile"><b>${u.qFile ? esc(u.qFile.name) : 'PDF con las preguntas'}</b><span class="muted" style="font-size:.85rem">${u.qFile ? 'Toca para cambiarlo' : 'Obligatorio'}</span></label>
+    <label class="drop ${u.kFile ? 'has' : ''}"><input type="file" accept="application/pdf" id="kFile"><b>${u.kFile ? esc(u.kFile.name) : 'PDF con las soluciones'}</b><span class="muted" style="font-size:.85rem">${u.kFile ? 'Toca para cambiarlo' : 'Opcional, si van en un archivo aparte'}</span></label>
+    <div class="field"><label for="uTitle">Nombre del test</label><input type="text" id="uTitle" value="${esc(u.title)}" placeholder="Ej.: Ley 39/2015 · Test III"></div>
+    <div class="field"><label for="uTopic">Tema</label><input type="text" id="uTopic" list="topics" value="${esc(u.topic)}" placeholder="Ej.: Ley 39/2015"><datalist id="topics">${topics.map(t => `<option value="${esc(t)}">`).join('')}</datalist></div>
+    <div class="row"><button class="btn primary" data-act="parse" ${u.qFile && !u.busy ? '' : 'disabled'}>Leer PDF</button>${u.busy ? '<span class="muted">Procesando…</span>' : ''}</div>
+    ${u.log ? `<div class="log">${esc(u.log)}</div>` : ''}
+  </div>`;
+  if (u.result) {
+    const r = u.result, withKey = r.qs.filter(q => q.a != null).length, bad = r.qs.filter(q => q.o.length !== 4).length;
+    h += `<div class="sheet pad stack" style="margin-top:16px"><h2>${r.qs.length} preguntas detectadas</h2>
+      <div class="tally"><span class="pill ${withKey === r.qs.length ? 'ok' : 'warn'}">${withKey} con solución</span>${bad ? `<span class="pill ko">${bad} con opciones incompletas</span>` : ''}${r.ai ? '<span class="pill pen">convertido con IA</span>' : ''}</div>
+      ${r.qs.slice(0, 2).map(q => `<div class="prev"><b>${q.n}.</b> ${esc(q.q)}<br>${q.o.map((o, i) => `<span class="${q.a === i ? '' : 'muted'}">${L[i]}) ${esc(o)}${q.a === i ? ' ✓' : ''}</span>`).join('<br>')}</div>`).join('<hr style="border:0;border-top:1px solid var(--line);width:100%">')}
+      <div class="row"><button class="btn primary" data-act="save-test" ${r.qs.length && !u.busy ? '' : 'disabled'}>Guardar test</button>
+      ${S.sample && !u.busy ? `<button class="btn" data-act="ai-parse">${r.qs.length ? '¿No cuadra? Convertir con IA' : 'Convertir con IA'}</button>` : ''}</div></div>`;
+  }
+  $app.innerHTML = shell(h, true);
+}
+async function doParse() {
+  const u = S.view.u; u.busy = true; u.log = 'Leyendo el PDF…'; u.result = null; renderUpload();
+  try {
+    u.qText = await pdfText(u.qFile);
+    u.kText = u.kFile ? await pdfText(u.kFile) : '';
+    const { body, key } = splitAtKey(cleanLines(u.qText));
+    const qs = parseQuestions(body);
+    const k = parseKey(u.kText || key);
+    qs.forEach(q => { q.a = k[q.n] != null && k[q.n] >= 0 ? k[q.n] : null; });
+    u.result = { qs };
+    u.log = qs.length ? '' : 'No se reconocieron preguntas con el formato 1. / a) b) c) d).';
+  } catch (e) { u.log = 'No se pudo leer el PDF: ' + (e.message || e); }
+  u.busy = false; renderUpload();
+}
+async function saveTest() {
+  const u = S.view.u, qs = u.result.qs;
+  const title = (document.getElementById('uTitle').value || u.qFile.name.replace(/\.pdf$/i, '')).trim();
+  const topic = (document.getElementById('uTopic').value || 'Otros').trim();
+  const id = title.toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) + '-' + Date.now().toString(36);
+  u.busy = true; u.log = 'Guardando…'; renderUpload();
+  try {
+    const t = { title, topic, questions: qs, createdAt: Date.now(), source: u.qFile.name };
+    await IDB.put('meta', 'custom:' + id, t); S.custom[id] = t; rebuildTests();
+    toast('Test guardado'); go({ name: 'detail', id });
+  } catch (e) { u.busy = false; u.log = 'No se pudo guardar (' + (e.message || e) + ').'; renderUpload(); }
+}
+async function writeKey(id, keyFn) {
+  const bank = await loadBank(id);
+  if (S.custom[id]) {
+    S.custom[id] = { ...S.custom[id], questions: bank.qs.map(q => { const a = keyFn(q); return a == null ? q : { ...q, a }; }) };
+    await IDB.put('meta', 'custom:' + id, S.custom[id]);
+  } else {
+    const fix = { ...(S.keyfix[id] || {}) };
+    bank.qs.forEach(q => { const a = keyFn(q); if (a != null) fix[q.n] = a; });
+    S.keyfix[id] = fix; await IDB.put('meta', 'keyfix:' + id, fix);
+  }
+  delete S.banks[id]; rebuildTests();
+  return S.tests[id].keyCount;
+}
+async function addKeyFromPdf(file) {
+  const id = S.view.id, log = document.getElementById('keyLog');
+  try {
+    log.textContent = 'Leyendo soluciones…';
+    const text = await pdfText(file);
+    const k = parseKey(text);
+    if (Object.keys(k).length < 3) { log.textContent = 'No se encontró una plantilla con el formato “1 B, 2 C…”.'; return; }
+    const n = await writeKey(id, q => k[q.n] != null && k[q.n] >= 0 ? k[q.n] : null);
+    log.textContent = ''; toast(n + ' preguntas con solución'); render();
+  } catch (e) { log.textContent = 'No se pudo leer el PDF (' + (e.code || e.message) + ').'; }
+}
+// ---------- modal ----------
+function confirmBox(msg, yesLabel, onYes, danger) {
+  $layer.innerHTML = `<div class="modal" data-act="modal-bg"><div class="sheet stack"><p style="margin:0">${msg}</p><div class="row"><span class="spacer"></span><button class="btn" data-act="modal-no">Cancelar</button><button class="btn ${danger ? 'danger' : 'primary'}" data-act="modal-yes">${yesLabel}</button></div></div></div>`;
+  S.onYes = onYes;
+}
+function closeModal() { $layer.innerHTML = ''; S.onYes = null; }
+
+// ---------- eventos ----------
+document.addEventListener('click', async e => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const act = b.dataset.act;
+  if (act === 'modal-bg' && e.target !== b) return;
+  switch (act) {
+    case 'home': S.run = null; go({ name: 'home' }); break;
+    case 'upload': go({ name: 'upload' }); break;
+    case 'detail': go({ name: 'detail', id: b.dataset.id }); break;
+    case 'opt': S.view.opts[b.dataset.k] = b.dataset.v; render(); break;
+    case 'start': {
+      const id = S.view.id;
+      const doIt = () => startSession(id, S.view.opts);
+      if (S.mine['sess~' + id]) confirmBox('Ya tienes este test a medias. Si empiezas uno nuevo, se pierde ese progreso.', 'Empezar de nuevo', doIt, true); else doIt();
+      break;
+    }
+    case 'resume': {
+      const id = b.dataset.id, s = S.mine['sess~' + id]; if (!s) return;
+      b.disabled = true;
+      await loadBank(id);
+      S.run = { id, sess: JSON.parse(JSON.stringify(s)), sheet: false };
+      go({ name: 'quiz' }); break;
+    }
+    case 'finish-from-detail': {
+      const id = S.view.id, s = S.mine['sess~' + id];
+      await loadBank(id);
+      confirmBox(`Se corrige con las ${Object.keys(s.ans || {}).length} respuestas que llevas; el resto cuenta en blanco.`, 'Corregir', () => finishRun(s, id));
+      break;
+    }
+    case 'pick': {
+      const s = S.run.sess, i = +b.dataset.i;
+      if (s.mode === 'practica' && s.ans[s.pos] != null) return;
+      s.ans[s.pos] = i; persistRun(); renderQuiz(); break;
+    }
+    case 'clear': delete S.run.sess.ans[S.run.sess.pos]; persistRun(); renderQuiz(); break;
+    case 'next': S.run.sess.pos = Math.min(S.run.sess.pos + 1, S.run.sess.ns.length - 1); persistRun(); renderQuiz(); window.scrollTo(0, 0); break;
+    case 'prev': S.run.sess.pos = Math.max(S.run.sess.pos - 1, 0); persistRun(); renderQuiz(); window.scrollTo(0, 0); break;
+    case 'jump': S.run.sess.pos = +b.dataset.i; S.run.sheet = false; persistRun(); renderQuiz(); window.scrollTo(0, 0); break;
+    case 'sheet': S.run.sheet = !S.run.sheet; renderQuiz(); break;
+    case 'quit': { const id = S.run.id; S.run = null; toast('Progreso guardado'); go({ name: 'detail', id }); break; }
+    case 'finish': {
+      const s = S.run.sess, left = s.ns.length - Object.keys(s.ans).length;
+      confirmBox(left ? `Te quedan ${left} preguntas sin responder; contarán en blanco. ¿Corregir ya?` : '¿Terminar y ver la corrección?', 'Corregir', () => finishRun(s, S.run.id));
+      break;
+    }
+    case 'result': go({ name: 'results', id: b.dataset.id, filter: 'all' }); break;
+    case 'filter': S.view.filter = b.dataset.v; renderResults(); break;
+    case 'retry-wrong': {
+      const a = S.mine[S.view.id], bank = S.banks[a.testId];
+      const ns = a.items.filter(it => { const q = bank.byN[it.n]; return q && q.a != null && it.r !== q.a; }).map(it => it.n);
+      const doIt = () => startSession(a.testId, { mode: 'practica' }, ns, 'fallos');
+      if (S.mine['sess~' + a.testId]) confirmBox('Tienes este test a medias. Si empiezas el repaso, se pierde ese progreso.', 'Empezar repaso', doIt, true); else doIt();
+      break;
+    }
+    case 'parse': doParse(); break;
+    case 'export': {
+      const meta = await IDB.all('meta');
+      const blob = new Blob([JSON.stringify({ app: 'test-oposiciones', v: 1, date: Date.now(), mine: S.mine, meta })], { type: 'application/json' });
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = 'test-oposiciones-copia-' + new Date().toISOString().slice(0, 10) + '.json';
+      document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+      break;
+    }
+    case 'save-test': saveTest(); break;
+    case 'del-test': {
+      const id = S.view.id;
+      confirmBox('Se elimina el test de la app. Tus intentos anteriores de este test dejarán de poder revisarse.', 'Eliminar', async () => {
+        if (S.custom[id]) { delete S.custom[id]; await IDB.del('meta', 'custom:' + id); }
+        else { S.hidden = [...S.hidden, id]; await IDB.put('meta', 'hidden', S.hidden); }
+        delete S.banks[id]; rebuildTests(); go({ name: 'home' });
+      }, true);
+      break;
+    }
+    case 'modal-bg': case 'modal-no': closeModal(); break;
+    case 'modal-yes': { const f = S.onYes; closeModal(); f && f(); break; }
+  }
+});
+document.addEventListener('change', e => {
+  const el = e.target;
+  if (el.id === 'qFile' || el.id === 'kFile') {
+    const u = S.view.u; const f = el.files[0]; if (!f) return;
+    u.title = document.getElementById('uTitle').value; u.topic = document.getElementById('uTopic').value;
+    if (el.id === 'qFile') { u.qFile = f; if (!u.title) u.title = f.name.replace(/\.pdf$/i, '').replace(/[_]+/g, ' ').trim(); } else u.kFile = f;
+    u.result = null; renderUpload();
+  }
+  if (el.id === 'keyFile' && el.files[0]) addKeyFromPdf(el.files[0]);
+  if (el.id === 'importFile' && el.files[0]) {
+    el.files[0].text().then(txt => {
+      const d = JSON.parse(txt);
+      if (d.app !== 'test-oposiciones') throw new Error('formato');
+      confirmBox('Se reemplaza el progreso de este móvil por el de la copia (' + when(d.date) + ').', 'Restaurar', async () => {
+        await IDB.clear('mine'); await IDB.clear('meta');
+        for (const [k, v] of Object.entries(d.mine || {})) await IDB.put('mine', k, v);
+        for (const [k, v] of Object.entries(d.meta || {})) await IDB.put('meta', k, v);
+        await loadLocal(); toast('Copia restaurada'); go({ name: 'home' });
+      });
+    }).catch(() => toast('Ese archivo no es una copia de esta app.'));
+    el.value = '';
+  }
+  if (el.id === 'penSel') { S.pen = +el.value; saveDoc(myPath('cfg'), { kind: 'cfg', pen: S.pen }); toast('Puntuación: ' + penLabel(S.pen)); }
+});
+document.addEventListener('keydown', e => {
+  if (S.view.name !== 'quiz' || $layer.innerHTML || /input|select|textarea/i.test(e.target.tagName)) return;
+  const k = e.key.toLowerCase();
+  if ('abcd'.includes(k) && k.length === 1) document.querySelector(`.opt[data-i="${L.indexOf(k)}"]:not([disabled])`)?.click();
+  if (e.key === 'ArrowRight') document.querySelector('[data-act="next"]')?.click();
+  if (e.key === 'ArrowLeft') document.querySelector('[data-act="prev"]:not([disabled])')?.click();
+});
+</script>
+</body></html>
